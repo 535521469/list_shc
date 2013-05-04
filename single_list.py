@@ -67,4 +67,4 @@ class SpiderProcess(object):
         
 if __name__ == '__main__':
     
-    sp = SpiderProcess(u'上海',configdata).run()
+    sp = SpiderProcess(u'哈尔滨',configdata).run()

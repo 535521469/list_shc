@@ -7,13 +7,14 @@ from bot.const import HTTPProxyValueConst
 from bot.dbutil import FetchSession
 from bot.item import HTTPProxy
 import datetime
+from sqlalchemy import desc
 
 def get_valid_proxy_fun():
 
     fs = FetchSession()
     try:
         proxies = fs.query(HTTPProxy).filter(HTTPProxy.validflag == HTTPProxyValueConst.validflag_yes)\
-        .filter(HTTPProxy.fetchdate == datetime.date.today()).all()
+        .filter(HTTPProxy.fetchdate == datetime.date.today()).order_by(desc(HTTPProxy.validdatetime)).limit(500).all()
     except Exception as e:
         raise e
     finally:fs.close()
@@ -23,7 +24,8 @@ def get_valid_proxy_fun():
 
     def search_proxies(proxies=[]):
         while 1:
-            for proxy in proxies:
+            for idx, proxy in enumerate(proxies):
+#                print '%s get one proxy %s' % (datetime.datetime.now(), idx)
                 yield proxy
             else:
                 yield None
@@ -31,7 +33,7 @@ def get_valid_proxy_fun():
                 fs = FetchSession()
                 try:
                     proxies = fs.query(HTTPProxy).filter(HTTPProxy.validflag == HTTPProxyValueConst.validflag_yes)\
-                    .filter(HTTPProxy.fetchdate == datetime.date.today()).all()
+                    .filter(HTTPProxy.fetchdate == datetime.date.today()).order_by(desc(HTTPProxy.validdatetime)).limit(500).all()
                 except Exception as e:
                     raise e
                 finally:fs.close()

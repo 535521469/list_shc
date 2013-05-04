@@ -94,7 +94,13 @@ def check_verification_code(parse):
 
             req = response.request.copy()
             req.replace(url=precede_url)
-            req.meta[u'proxy'] = proxy.build_literal()
+
+            proxy_str = proxy.build_literal()
+            
+            req.meta[u'proxy'] = proxy_str
+            msg = (u'use proxy %s access '
+                   '%s ') % (proxy_str, req.url)
+            self.log(msg, log.INFO)
             yield req
             
         else:
@@ -121,9 +127,14 @@ def check_blank_page(parse):
                 proxy = get_valid_proxy.next()
                 if proxy:
                     break
-            
+                
             req = response.request.copy()
-            req.meta[u'proxy'] = proxy.build_literal()
+            proxy_str =proxy.build_literal()
+            
+            req.meta[u'proxy'] = proxy_str
+            msg = (u'use proxy %s access '
+                   '%s ') % (proxy_str, req.url)
+            self.log(msg, log.INFO)
             yield req
             
         else:
@@ -190,7 +201,7 @@ def with_ip_proxy(parse):
                         rs.meta['proxy'] = proxy_str
                         msg = (u'use proxy %s access '
                                '%s ') % (proxy_str, rs.url)
-                        self.log(msg, log.DEBUG)
+                        self.log(msg, log.INFO)
                     yield rs
                 else:
                     yield rs
@@ -247,12 +258,13 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                             fs.close()
                     elif rs.callback.im_class == CarListSpider:
                         # next page spider
-                        if rs_len:
-                            yield rs
-                        else:
-                            self.log(u'%s has no detail page , '
-                                     'give up to crawl next '
-                                     'page' % response.request.url, log.INFO)
+#                        if rs_len:
+#                            yield rs
+#                        else:
+#                            self.log(u'%s has no detail page , '
+#                                     'give up to crawl next '
+#                                     'page' % response.request.url, log.INFO)
+                        yield rs
                     
     return parse_simulate
 

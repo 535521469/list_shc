@@ -7,7 +7,7 @@ DOWNLOADER_MIDDLEWARES = {'crawler.shc.fe.middlewares.ProxyRetryMiddleWare':450,
                           'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware':None
                            }
 
-DOWNLOAD_TIMEOUT=6.18
-DOWNLOAD_DELAY=0
+DOWNLOAD_TIMEOUT=1.5
+DOWNLOAD_DELAY=0.8
 
 USER_AGENT='Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0'
