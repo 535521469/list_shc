@@ -10,8 +10,6 @@ from scrapy.cmdline import execute
 from scrapy.settings import CrawlerSettings
 import os
 
-
-
 class SpiderProcess(object):
     
     def __init__(self, city_name, configdata):
@@ -66,5 +64,5 @@ class SpiderProcess(object):
         execute(argv=["scrapy", "crawl", 'SHCSpider' ], settings=settings)
         
 if __name__ == '__main__':
-    
-    sp = SpiderProcess(u'哈尔滨',configdata).run()
+    sp = SpiderProcess(u'广州', configdata).run()
+        

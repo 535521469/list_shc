@@ -30,8 +30,11 @@ class FESpider(BaseSpider):
     def start_requests(self):
         yield self.make_requests_from_url('http://www.58.com/ershouche/changecity/')
     
+#    def get_page_no_from_url(self, url):
+#        return url[url.index('/pn') + 3:url.index('?') - 1]
+
     def get_page_no_from_url(self, url):
-        return url[url.index('/pn') + 3:url.index('?') - 1]
+        return url[url.index('/pn') + 3:len(url) - 1]
     
     def get_current_city(self, cookies):
         return cookies[const.CONFIG_DATA][const.CURRENT_CITY]
@@ -142,7 +145,12 @@ class SHCSpider(FESpider):
             city = a_tag.select('text()').extract()[0]
             city_url = a_tag.select('@href').extract()[0]
             if unicode(city.strip()) == unicode(city_name.strip()):
-                url = u'%spn%s/?selpic=1' % (city_url, cookies[const.START_PAGE])
+                url = u'%s1/pn%s/' % (city_url, cookies[const.START_PAGE])
+                yield Request(url, CarListSpider().parse,
+                              dont_filter=True,
+                              cookies=cookies
+                              )
+                url = u'%s0/pn%s/' % (city_url, cookies[const.START_PAGE])
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
                               cookies=cookies
@@ -174,22 +182,9 @@ class CarListSpider(FESpider):
         except ValueError:
             pass
         
-        
-        #=======================================================================
-        # whether if out of page number config
-        #=======================================================================
-#        if start_page <= current_page_no <= end_page:
-#            tr_tags = hxs.select('//table[@class="tbimg list_text_pa"]//tr')
-#        else:
-#            msg = (u"page No.%s out of page scope , ignore analyse"
-#                   " contents , %s , %s") % (current_page_no,
-#                                             current_city,
-#                                             response.url,
-#                                             )
-#            self.log(msg, log.INFO)
-#            tr_tags = []
 
-        tr_tags = hxs.select('//table[@class="tbimg list_text_pa"]//tr')
+#        tr_tags = hxs.select('//table[@class="tbimg list_text_pa"]//tr')
+        tr_tags = hxs.select('//table[@class="tbimg"]//tr')
         
         url_len = 0
         

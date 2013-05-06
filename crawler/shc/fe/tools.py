@@ -208,6 +208,67 @@ def with_ip_proxy(parse):
         
     return parse_simulate
 
+#def list_page_parse_4_remove_duplicate_detail_page_request(parse):
+#    
+#    @wraps(parse)
+#    def parse_simulate(self, response):
+#        rss = parse(self, response)
+#        from crawler.shc.fe.spiders import CarDetailSpider, CarListSpider
+#        if rss:
+#            rs_len = 0
+#            for rs in rss:
+#                if isinstance(rs, Request):
+#                    # detail spider
+#                    if rs.callback.im_class == CarDetailSpider:
+#                        rs_len = rs_len + 1
+#                        fs = FetchSession()
+#                        try:
+#                            or_express = or_(CarInfo.sourceurl == rs.url,
+#                                          CarInfo.popularizeurl == rs.url)
+#                            ci = fs.query(CarInfo).filter(or_express).first() 
+#                            if ci:
+#                                self.log(u'give up fetched detail page %s %s '
+#                                         '%s' % (rs.url, ci.cityname, ci.seqid),
+#                                         log.INFO)
+#                            else:
+#                                self.log(u'add detail page %s' % (rs.url,),
+#                                         log.INFO)
+#                                
+#                                ci = CarInfo()
+#                                if rs.url.find(u'jump.zhineng') <> -1:
+#                                    ci.popularizeurl = rs.url
+#                                else:
+#                                    ci.sourceurl = rs.url
+#                                
+#                                ci.sourcetype = '58'
+#                                
+#                                fs.add(ci)
+#                                
+#                                #===============================================
+#                                # not crawl the detail page this service 
+#                                #===============================================
+##                                yield rs
+#                        except Exception as e:
+#                            fs.rollback()
+#                            self.log(u'something wrong %s' % str(e), log.CRITICAL)
+#                            raise e
+#                        else:
+#                            fs.commit()
+#                        finally:
+#                            fs.close()
+#                    elif rs.callback.im_class == CarListSpider:
+#                        # next page spider
+##                        if rs_len:
+##                            yield rs
+##                        else:
+##                            self.log(u'%s has no detail page , '
+##                                     'give up to crawl next '
+##                                     'page' % response.request.url, log.INFO)
+#                        yield rs
+#                    
+#    return parse_simulate
+
+
 def list_page_parse_4_remove_duplicate_detail_page_request(parse):
     
     @wraps(parse)
@@ -225,24 +286,19 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                         try:
                             or_express = or_(CarInfo.sourceurl == rs.url,
                                           CarInfo.popularizeurl == rs.url)
-                            ci = fs.query(CarInfo).filter(or_express).first() 
-                            if ci:
-                                self.log(u'give up fetched detail page %s %s '
-                                         '%s' % (rs.url, ci.cityname, ci.seqid),
-                                         log.INFO)
+                            
+                            self.log(u'add detail page %s' % (rs.url,),
+                                     log.INFO)
+                            
+                            ci = CarInfo()
+                            if rs.url.find(u'jump.zhineng') <> -1:
+                                ci.popularizeurl = rs.url
                             else:
-                                self.log(u'add detail page %s' % (rs.url,),
-                                         log.INFO)
-                                
-                                ci = CarInfo()
-                                if rs.url.find(u'jump.zhineng') <> -1:
-                                    ci.popularizeurl = rs.url
-                                else:
-                                    ci.sourceurl = rs.url
-                                
-                                ci.sourcetype = '58'
-                                
-                                fs.add(ci)
+                                ci.sourceurl = rs.url
+                            
+                            ci.sourcetype = '58'
+                            
+                            fs.add(ci)
                                 
                                 #===============================================
                                 # not crawl the detail page this service 

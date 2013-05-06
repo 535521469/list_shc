@@ -121,7 +121,6 @@ if __name__ == '__main__':
     frequence = configdata[AppConst.app_config].get(AppConst.app_config_frequence, 1800)
     frequence = int(frequence)
     while 1:
-        
         root_scheduler = scheduler(time.time, time.sleep)
         root_scheduler.enter(0, 0, add_task, (root_scheduler,))
         root_scheduler.run()
