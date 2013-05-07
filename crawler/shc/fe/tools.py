@@ -13,7 +13,6 @@ from scrapy import log
 from scrapy.http.request import Request
 from scrapy.selector import HtmlXPathSelector
 import datetime
-from sqlalchemy.sql.expression import or_
 
 def ignore_notice(parse):
     
@@ -129,7 +128,7 @@ def check_blank_page(parse):
                     break
                 
             req = response.request.copy()
-            proxy_str =proxy.build_literal()
+            proxy_str = proxy.build_literal()
             
             req.meta[u'proxy'] = proxy_str
             msg = (u'use proxy %s access '
@@ -284,11 +283,9 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                         rs_len = rs_len + 1
                         fs = FetchSession()
                         try:
-                            or_express = or_(CarInfo.sourceurl == rs.url,
-                                          CarInfo.popularizeurl == rs.url)
                             
-                            self.log(u'add detail page %s' % (rs.url,),
-                                     log.INFO)
+                            
+                            declaredate = rs.cookies.get(SHCFEShopInfoConstant.declaretime, None)
                             
                             ci = CarInfo()
                             if rs.url.find(u'jump.zhineng') <> -1:
@@ -296,9 +293,37 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                             else:
                                 ci.sourceurl = rs.url
                             
+                            if declaredate:
+                                query_clause = fs.query(CarInfo)
+                                if ci.sourceurl:
+                                    query_clause = query_clause.filter(
+                                               CarInfo.sourceurl == ci.sourceurl)
+                                elif ci.popularizeurl:
+                                    query_clause = query_clause.filter(
+                                               CarInfo.popularizeurl == ci.popularizeurl)
+
+                                exist_ci = query_clause.filter(CarInfo.declaredate == declaredate).first()
+                                if exist_ci:
+                                    self.log((u'ignore dup %s detail '
+                                              'page %s') % (exist_ci.declaredate, rs.url,), log.INFO)
+                                    continue
+                                else:
+                                    exist_ci = query_clause.filter(CarInfo.statustype == None).first()
+                                    if exist_ci:
+                                        self.log((u'ignore dup detail '
+                                                  'page %s') % (rs.url,), log.INFO)
+                                        continue
+
+                                ci.declaredate = declaredate
+
+
+                            #===================================================
+                            # add sourcetype and persist to db
+                            #===================================================
                             ci.sourcetype = '58'
-                            
                             fs.add(ci)
+                            self.log(u'add detail page %s %s' % (ci.declaredate, rs.url,),
+                                     log.INFO)
                                 
                                 #===============================================
                                 # not crawl the detail page this service 

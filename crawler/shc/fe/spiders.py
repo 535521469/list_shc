@@ -4,7 +4,8 @@ Created on 2013-3-31
 @author: Administrator
 '''
 from crawler.shc.fe.const import FEConstant as const
-from crawler.shc.fe.item import SHCFEShopInfo, SHCFEShopInfoConstant as voconst
+from crawler.shc.fe.item import SHCFEShopInfo, SHCFEShopInfoConstant as voconst, \
+    SHCFEShopInfoConstant
 from crawler.shc.fe.tools import detail_page_parse_4_save_2_db, \
     list_page_parse_4_remove_duplicate_detail_page_request, \
     seller_page_parse_4_save_2_db, with_ip_proxy, check_blank_page, \
@@ -181,7 +182,6 @@ class CarListSpider(FESpider):
             current_page_no = int(self.get_page_no_from_url(current_url))
         except ValueError:
             pass
-        
 
 #        tr_tags = hxs.select('//table[@class="tbimg list_text_pa"]//tr')
         tr_tags = hxs.select('//table[@class="tbimg"]//tr')
@@ -189,6 +189,30 @@ class CarListSpider(FESpider):
         url_len = 0
         
         for tr_tag in tr_tags:
+            
+            declare_date = None
+
+            try:
+                declare_date = tr_tag.select('//span[@class="c_999"]/text()').extract()[0]
+            except IndexError:
+                pass
+            
+            if declare_date:
+                today = datetime.date.today()
+                declare_date_str = u'%s-%s' % (today.year, declare_date)
+                try:
+                    declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                    if declare_date > today:
+                        declare_date_str = u'%s-%s' % (today.year - 1, declare_date)
+                        declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                    cookies[SHCFEShopInfoConstant.declaretime] = declare_date
+                except ValueError:
+                    declare_date = today
+                    #===========================================================
+                    # not standar datetime format
+                    #===========================================================
+                    self.log(u'%s ' % declare_date_str, log.DEBUG)
+                cookies[SHCFEShopInfoConstant.declaretime] = declare_date
             
             td_tags = tr_tag.select('td').extract()
             if len(td_tags) == 1:

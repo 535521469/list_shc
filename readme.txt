@@ -1,3 +1,6 @@
+[2013-05-07 0.0.5]
+1.增加list页面得到detail url和 declaredate ， 方便去重
+2.增加list页面得到detail url 对 statustype = null的去重
 
 [2013-05-06 0.0.4]
 1.取消去重功能
