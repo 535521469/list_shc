@@ -1,3 +1,8 @@
+[2013-05-16 v0.0.6]
+1.list parse 增加验证码过滤功能
+2.重试中间件中增加从 验证码url中取实际list url的逻辑，提高代理的使用成功率
+2.详细日志输出信息
+
 [2013-05-07 0.0.5]
 1.增加list页面得到detail url和 declaredate ， 方便去重
 2.增加list页面得到detail url 对 statustype = null的去重

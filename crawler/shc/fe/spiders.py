@@ -9,7 +9,7 @@ from crawler.shc.fe.item import SHCFEShopInfo, SHCFEShopInfoConstant as voconst,
 from crawler.shc.fe.tools import detail_page_parse_4_save_2_db, \
     list_page_parse_4_remove_duplicate_detail_page_request, \
     seller_page_parse_4_save_2_db, with_ip_proxy, check_blank_page, \
-    ignore_notice, check_award
+    ignore_notice, check_award, check_verification_code
 from scrapy import log
 from scrapy.http.request import Request
 from scrapy.selector import HtmlXPathSelector
@@ -163,6 +163,7 @@ class SHCSpider(FESpider):
         
 class CarListSpider(FESpider):
 
+    @check_verification_code
     @check_blank_page
     @check_award
     @with_ip_proxy    

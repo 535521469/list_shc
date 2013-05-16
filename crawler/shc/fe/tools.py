@@ -32,7 +32,7 @@ def ignore_notice(parse):
             for rs in rss:
                 if isinstance(rs, Request):
                     rs = rs.replace(dont_filter=True)
-                    yield rs
+                yield rs
     return parse_simulate
 
 def check_award(parse):
@@ -59,11 +59,12 @@ def check_award(parse):
                 req = req.replace(url=precede_url)
                 proxy_str = proxy.build_literal()
                 req.meta[u'proxy'] = proxy_str
-                self.log((u'with award div %s , use %s ') % (precede_url, proxy_str), log.INFO)
+                self.log((u'check_award %s , use %s ') % (precede_url, proxy_str), log.INFO)
                 yield req
                 
             except Exception as e:
-#                precede_url = response.request.headers['Referer']
+                self.log("error in check_award %s" % url, log.CRITICAL)
+                raise e
                 pass
             
         else:
@@ -71,7 +72,7 @@ def check_award(parse):
             for rs in rss:
                 if isinstance(rs, Request):
                     rs = rs.replace(dont_filter=True)
-                    yield rs
+                yield rs
     return parse_simulate
 
 def check_verification_code(parse):
@@ -83,7 +84,7 @@ def check_verification_code(parse):
         hxs = HtmlXPathSelector(response)
         verification_div = hxs.select('//div[@class="w_990"]')
         url = response.url
-        if verification_div:
+        if url.find('support') > -1 or verification_div :
             precede_url = url[url.index(u'url=') + 4:]
             
             while 1:
@@ -92,13 +93,13 @@ def check_verification_code(parse):
                     break
 
             req = response.request.copy()
-            req.replace(url=precede_url)
+            rs = req.replace(url=precede_url)
 
             proxy_str = proxy.build_literal()
             
             req.meta[u'proxy'] = proxy_str
-            msg = (u'use proxy %s access '
-                   '%s ') % (proxy_str, req.url)
+            msg = (u'with ver code, use proxy %s access '
+                   '%s ') % (proxy_str, precede_url)
             self.log(msg, log.INFO)
             yield req
             
@@ -107,7 +108,7 @@ def check_verification_code(parse):
             for rs in rss:
                 if isinstance(rs, Request):
                     rs = rs.replace(dont_filter=True)
-                    yield rs
+                yield rs
                 
     return parse_simulate
 
@@ -131,7 +132,7 @@ def check_blank_page(parse):
             proxy_str = proxy.build_literal()
             
             req.meta[u'proxy'] = proxy_str
-            msg = (u'use proxy %s access '
+            msg = (u'check_blank_page %s access '
                    '%s ') % (proxy_str, req.url)
             self.log(msg, log.INFO)
             yield req
@@ -141,7 +142,7 @@ def check_blank_page(parse):
             for rs in rss:
                 if isinstance(rs, Request):
                     rs = rs.replace(dont_filter=True)
-                    yield rs
+                yield rs
                 
     return parse_simulate
 
@@ -181,7 +182,7 @@ def check_verification_code_gif(parse):
                 for rs in rss:
                     if isinstance(rs, Request):
                         rs = rs.replace(dont_filter=True)
-                        yield rs
+                    yield rs
                 
     return parse_simulate
 
@@ -198,75 +199,12 @@ def with_ip_proxy(parse):
                         proxy_str = proxy.build_literal()
                         rs = rs.replace(dont_filter=True)
                         rs.meta['proxy'] = proxy_str
-                        msg = (u'use proxy %s access '
+                        msg = (u'with_ip_proxy use proxy %s access '
                                '%s ') % (proxy_str, rs.url)
                         self.log(msg, log.INFO)
-                    yield rs
-                else:
-                    yield rs
+                yield rs
         
     return parse_simulate
-
-#def list_page_parse_4_remove_duplicate_detail_page_request(parse):
-#    
-#    @wraps(parse)
-#    def parse_simulate(self, response):
-#        rss = parse(self, response)
-#        from crawler.shc.fe.spiders import CarDetailSpider, CarListSpider
-#        if rss:
-#            rs_len = 0
-#            for rs in rss:
-#                if isinstance(rs, Request):
-#                    # detail spider
-#                    if rs.callback.im_class == CarDetailSpider:
-#                        rs_len = rs_len + 1
-#                        fs = FetchSession()
-#                        try:
-#                            or_express = or_(CarInfo.sourceurl == rs.url,
-#                                          CarInfo.popularizeurl == rs.url)
-#                            ci = fs.query(CarInfo).filter(or_express).first() 
-#                            if ci:
-#                                self.log(u'give up fetched detail page %s %s '
-#                                         '%s' % (rs.url, ci.cityname, ci.seqid),
-#                                         log.INFO)
-#                            else:
-#                                self.log(u'add detail page %s' % (rs.url,),
-#                                         log.INFO)
-#                                
-#                                ci = CarInfo()
-#                                if rs.url.find(u'jump.zhineng') <> -1:
-#                                    ci.popularizeurl = rs.url
-#                                else:
-#                                    ci.sourceurl = rs.url
-#                                
-#                                ci.sourcetype = '58'
-#                                
-#                                fs.add(ci)
-#                                
-#                                #===============================================
-#                                # not crawl the detail page this service 
-#                                #===============================================
-##                                yield rs
-#                        except Exception as e:
-#                            fs.rollback()
-#                            self.log(u'something wrong %s' % str(e), log.CRITICAL)
-#                            raise e
-#                        else:
-#                            fs.commit()
-#                        finally:
-#                            fs.close()
-#                    elif rs.callback.im_class == CarListSpider:
-#                        # next page spider
-##                        if rs_len:
-##                            yield rs
-##                        else:
-##                            self.log(u'%s has no detail page , '
-##                                     'give up to crawl next '
-##                                     'page' % response.request.url, log.INFO)
-#                        yield rs
-#                    
-#    return parse_simulate
-
 
 def list_page_parse_4_remove_duplicate_detail_page_request(parse):
     
@@ -283,10 +221,7 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                         rs_len = rs_len + 1
                         fs = FetchSession()
                         try:
-                            
-                            
                             declaredate = rs.cookies.get(SHCFEShopInfoConstant.declaretime, None)
-                            
                             ci = CarInfo()
                             if rs.url.find(u'jump.zhineng') <> -1:
                                 ci.popularizeurl = rs.url
@@ -338,13 +273,6 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                         finally:
                             fs.close()
                     elif rs.callback.im_class == CarListSpider:
-                        # next page spider
-#                        if rs_len:
-#                            yield rs
-#                        else:
-#                            self.log(u'%s has no detail page , '
-#                                     'give up to crawl next '
-#                                     'page' % response.request.url, log.INFO)
                         yield rs
                     
     return parse_simulate

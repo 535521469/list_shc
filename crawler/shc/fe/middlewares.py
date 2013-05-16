@@ -19,14 +19,19 @@ class ProxyRetryMiddleWare(RetryMiddleware):
         if isinstance(reason, TCPTimedOutError):
             reason.args = (u'...',)
         
+        rs = request.copy()
+        if request.url.find('support') > -1:
+            url = request.url
+            anew_url = url[url.index(u'url=') + 4:]
+            rs = rs.replace(url=anew_url)
+        
         if retries <= self.max_retry_times - 1:
             next_proxy = get_valid_proxy.next()
-            rs = request.copy()
             if next_proxy:
                 proxy_str = next_proxy.build_literal()
                 rs = rs.replace(dont_filter=True)
                 rs.meta['proxy'] = proxy_str
-                msg = (u'use %s access %s ') % (proxy_str, rs.url)
+                msg = (u'retry mw use %s access %s ') % (proxy_str, rs.url)
                 rs.meta[u'proxy'] = proxy_str 
                 spider.log(msg, log.INFO)
             else:
