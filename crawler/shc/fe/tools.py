@@ -4,6 +4,8 @@ Created on 2013-3-31
 @author: Administrator
 '''
 from bot.dbutil import FetchSession
+from bot.const import CarInfoValueConst
+from crawler.shc.fe.const import FEConstant
 from bot.item import CarInfo, SellerInfo
 from bot.proxyutil import get_valid_proxy
 from crawler.shc.fe.item import SHCFEShopInfoConstant
@@ -256,8 +258,11 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                             # add sourcetype and persist to db
                             #===================================================
                             ci.sourcetype = '58'
+                            
+                            custom_flag = rs.cookies.get(FEConstant.CUSTOMER_FLAG, CarInfoValueConst.car_source_unkonwn)
+                            ci.carsourcetype = custom_flag
                             fs.add(ci)
-                            self.log(u'add detail page %s %s' % (ci.declaredate, rs.url,),
+                            self.log(u'add detail page %s %s %s' % (ci.declaredate, rs.url, custom_flag),
                                      log.INFO)
                                 
                                 #===============================================
