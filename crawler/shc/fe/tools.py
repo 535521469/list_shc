@@ -221,10 +221,12 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                     # detail spider
                     if rs.callback.im_class == CarDetailSpider:
                         rs_len = rs_len + 1
+                        custom_flag = rs.cookies.get(FEConstant.CUSTOMER_FLAG, CarInfoValueConst.car_source_unkonwn)
                         fs = FetchSession()
                         try:
                             declaredate = rs.cookies.get(SHCFEShopInfoConstant.declaretime, None)
                             ci = CarInfo()
+                            ci.carsourcetype = custom_flag
                             if rs.url.find(u'jump.zhineng') <> -1:
                                 ci.popularizeurl = rs.url
                             else:
@@ -259,8 +261,6 @@ def list_page_parse_4_remove_duplicate_detail_page_request(parse):
                             #===================================================
                             ci.sourcetype = '58'
                             
-                            custom_flag = rs.cookies.get(FEConstant.CUSTOMER_FLAG, CarInfoValueConst.car_source_unkonwn)
-                            ci.carsourcetype = custom_flag
                             fs.add(ci)
                             self.log(u'add detail page %s %s %s' % (ci.declaredate, rs.url, custom_flag),
                                      log.INFO)
