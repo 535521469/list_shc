@@ -4,6 +4,7 @@ Created on 2013-3-31
 @author: Administrator
 '''
 from crawler.shc.fe.const import FEConstant as const
+from bot.const import CarInfoValueConst
 from crawler.shc.fe.item import SHCFEShopInfo, SHCFEShopInfoConstant as voconst, \
     SHCFEShopInfoConstant
 from crawler.shc.fe.tools import detail_page_parse_4_save_2_db, \
@@ -147,14 +148,19 @@ class SHCSpider(FESpider):
             city_url = a_tag.select('@href').extract()[0]
             if unicode(city.strip()) == unicode(city_name.strip()):
                 url = u'%s1/pn%s/' % (city_url, cookies[const.START_PAGE])
+                cks_shop = dict(cookies)
+                cks_shop[const.CUSTOMER_FLAG] = CarInfoValueConst.car_source_shop
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
-                              cookies=cookies
+                              cookies=cks_shop
                               )
                 url = u'%s0/pn%s/' % (city_url, cookies[const.START_PAGE])
+                
+                cks_individual = dict(cookies)
+                cks_individual[const.CUSTOMER_FLAG] = CarInfoValueConst.car_source_individual
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
-                              cookies=cookies
+                              cookies=cks_individual
                               )
                 break
         else:
