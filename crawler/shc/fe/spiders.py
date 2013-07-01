@@ -35,7 +35,13 @@ class FESpider(BaseSpider):
 #        return url[url.index('/pn') + 3:url.index('?') - 1]
 
     def get_page_no_from_url(self, url):
-        return url[url.index('/pn') + 3:len(url) - 1]
+        parts = url.split(u'/')
+        page = 1
+        for part in parts:
+            if part.startswith("pn"):
+                page = part.replace("pn","")
+                break
+        return page
     
     def get_current_city(self, cookies):
         return cookies[const.CONFIG_DATA][const.CURRENT_CITY]
@@ -146,12 +152,12 @@ class SHCSpider(FESpider):
             city = a_tag.select('text()').extract()[0]
             city_url = a_tag.select('@href').extract()[0]
             if unicode(city.strip()) == unicode(city_name.strip()):
-                url = u'%s1/pn%s/' % (city_url, cookies[const.START_PAGE])
+                url = u'%s1/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
                               cookies=cookies
                               )
-                url = u'%s0/pn%s/' % (city_url, cookies[const.START_PAGE])
+                url = u'%s0/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
                               cookies=cookies
@@ -188,53 +194,104 @@ class CarListSpider(FESpider):
         tr_tags = hxs.select('//table[@class="tbimg"]//tr')
         
         url_len = 0
-        
-        for tr_tag in tr_tags:
+        if tr_tags:
             
-            declare_date = None
-
-            try:
-                declare_date = tr_tag.select('//span[@class="c_999"]/text()').extract()[0]
-            except IndexError:
-                pass
-            
-            if declare_date:
-                today = datetime.date.today()
-                declare_date_str = u'%s-%s' % (today.year, declare_date)
+            for tr_tag in tr_tags:
+                
+                declare_date = None
+    
                 try:
-                    declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
-                    if declare_date > today:
-                        declare_date_str = u'%s-%s' % (today.year - 1, declare_date)
+                    declare_date = tr_tag.select('//span[@class="c_999"]/text()').extract()[0]
+                except IndexError:
+                    pass
+                
+                if declare_date:
+                    today = datetime.date.today()
+                    declare_date_str = u'%s-%s' % (today.year, declare_date)
+                    try:
                         declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                        if declare_date > today:
+                            declare_date_str = u'%s-%s' % (today.year - 1, declare_date)
+                            declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                        cookies[SHCFEShopInfoConstant.declaretime] = declare_date
+                    except ValueError:
+                        declare_date = today
+                        #===========================================================
+                        # not standar datetime format
+                        #===========================================================
+                        self.log(u'%s ' % declare_date_str, log.DEBUG)
                     cookies[SHCFEShopInfoConstant.declaretime] = declare_date
-                except ValueError:
-                    declare_date = today
-                    #===========================================================
-                    # not standar datetime format
-                    #===========================================================
-                    self.log(u'%s ' % declare_date_str, log.DEBUG)
-                cookies[SHCFEShopInfoConstant.declaretime] = declare_date
-            
-            td_tags = tr_tag.select('td').extract()
-            if len(td_tags) == 1:
-                continue
-            
-            url = tr_tag.select('td[1]/a/@href').extract()[0]
-            
-            url_len = url_len + 1
-            self.log((u'add detail page in list page %s '
-                      '%s ') % (self.get_current_city(cookies), url), log.DEBUG)
-            
-            yield Request(url, CarDetailSpider().parse,
-                          dont_filter=True,
-                          cookies=cookies,
-                          )
+                
+                td_tags = tr_tag.select('td').extract()
+                if len(td_tags) == 1:
+                    continue
+                
+                url = tr_tag.select('td[1]/a/@href').extract()[0]
+                
+                url_len = url_len + 1
+                self.log((u'add detail page in list page %s '
+                          '%s ') % (self.get_current_city(cookies), url), log.DEBUG)
+                
+                yield Request(url, CarDetailSpider().parse,
+                              dont_filter=True,
+                              cookies=cookies,
+                              )
+            else:
+                if url_len > 0:
+                    self.log((u'%s list page No %s , total add detail page '
+                              '%s') % (self.get_current_city(cookies),
+                                       current_page_no,
+                                       url_len), log.INFO)
         else:
-            self.log((u'%s list page No %s , total add detail page '
-                      '%s') % (self.get_current_city(cookies),
-                               current_page_no,
-                               url_len), log.INFO)
-
+            tr_tags = hxs.select('//table[@class="tbimg ty-tbimg"]//tr')
+            if tr_tags:
+                for tr_tag in tr_tags:
+                
+                    td_tags = tr_tag.select('td').extract()
+                    if len(td_tags) == 1:
+                        continue
+                    
+                    declare_date = None
+        
+                    try:
+                        declare_date = tr_tag.select('//span[@class="c_999"]/text()').extract()[0]
+                    except IndexError:
+                        pass
+                    
+                    if declare_date:
+                        today = datetime.date.today()
+                        declare_date_str = u'%s-%s' % (today.year, declare_date)
+                        try:
+                            declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                            if declare_date > today:
+                                declare_date_str = u'%s-%s' % (today.year - 1, declare_date)
+                                declare_date = strptime(declare_date_str, '%Y-%m-%d').date()
+                            cookies[SHCFEShopInfoConstant.declaretime] = declare_date
+                        except ValueError:
+                            declare_date = today
+                            #===========================================================
+                            # not standar datetime format
+                            #===========================================================
+                            self.log(u'%s ' % declare_date_str, log.DEBUG)
+                        cookies[SHCFEShopInfoConstant.declaretime] = declare_date
+                    
+                    url = tr_tag.select('td[1]/div/a/@href').extract()[0]
+                    
+                    url_len = url_len + 1
+                    self.log((u'add detail page in list page %s '
+                              '%s ') % (self.get_current_city(cookies), url), log.DEBUG)
+                    
+                    yield Request(url, CarDetailSpider().parse,
+                                  dont_filter=True,
+                                  cookies=cookies,
+                                  )
+                else:
+                    if url_len > 0:
+                        self.log((u'%s list page No %s , total add detail page '
+                                  '%s') % (self.get_current_city(cookies),
+                                           current_page_no,
+                                           url_len), log.INFO)
+            
         #=======================================================================
         # catch next page
         #=======================================================================
