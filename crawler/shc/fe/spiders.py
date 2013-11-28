@@ -153,15 +153,15 @@ class SHCSpider(FESpider):
             city = a_tag.select('text()').extract()[0]
             city_url = a_tag.select('@href').extract()[0]
             if unicode(city.strip()) == unicode(city_name.strip()):
-                url = u'%s1/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
-                url = u'%s1/pn%s/' % (city_url, cookies[const.START_PAGE])
+                url = u'%s/1/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
+                url = u'%s/1/pn%s/' % (city_url, cookies[const.START_PAGE])
                 cks_shop = dict(cookies)
                 cks_shop[const.CUSTOMER_FLAG] = CarInfoValueConst.car_source_shop
                 yield Request(url, CarListSpider().parse,
                               dont_filter=True,
                               cookies=cks_shop
                               )
-                url = u'%s0/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
+                url = u'%s/0/pn%s/?sort=sortid_desc' % (city_url, cookies[const.START_PAGE])
                 
                 cks_individual = dict(cookies)
                 cks_individual[const.CUSTOMER_FLAG] = CarInfoValueConst.car_source_individual
